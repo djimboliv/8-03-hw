@@ -10,7 +10,7 @@
 В качестве ответа в репозиторий шаблона с решением добавьте скриншоты с настройками раннера в проекте.`
 
 ### Решение 1
-
+`Скриншот к заданию 1:`
 ![runner](https://github.com/djimboliv/8-03-hw/tree/main/img/runner.png)
 
 ### Задание 2
@@ -44,6 +44,6 @@ build:
   script:
     - go build -o app
 ```
-
+`Скриншот к заданию 2:`
 ![pipelines](https://github.com/djimboliv/8-03-hw/tree/main/img/pipelines.png)
 
