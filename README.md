@@ -1,71 +1,129 @@
-# Домашнее задание к занятию "`Система мониторинга Zabbix. Часть 2`" - `Яковлев Кирилл`
+# Домашнее задание к занятию 2 «Кластеризация и балансировка нагрузки» - `Яковлев Кирилл`
 
 
 ### Задание 1
 `Что нужно сделать:`
 
-`Создайте свой шаблон, в котором будут элементы данных, мониторящие загрузку CPU и RAM хоста.
-
-Процесс выполнения
-Выполняя ДЗ сверяйтесь с процессом отражённым в записи лекции.
-В веб-интерфейсе Zabbix Servera в разделе Templates создайте новый шаблон
-Создайте Item который будет собирать информацию об загрузке CPU в процентах
-Создайте Item который будет собирать информацию об загрузке RAM в процентах
-Требования к результату
- Прикрепите в файл README.md скриншот страницы шаблона с названием «Задание 1»`
+`Запустите два simple python сервера на своей виртуальной машине на разных портах`
+`Установите и настройте HAProxy, воспользуйтесь материалами к лекции по ссылке`
+`Настройте балансировку Round-robin на 4 уровне.`
+`На проверку направьте конфигурационный файл haproxy, скриншоты, где видно перенаправление запросов на разные серверы при обращении к HAProxy.`
 
 ### Решение 1
 `Скриншот к заданию 1:`
-![task1_templates](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_templates.png)
-![task1_items](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_items.png)
+![task1_haproxy_4](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_haproxy_4.png)
 
+[Ссылка на конфигурационный файл haproxy.cfg](haproxy_4.cfg)
 
-### Задание 2-3
+**Конфигурационный файл HAProxy (фрагмент L4 балансировки):**
+```
+global
+        log /dev/log    local0
+        log /dev/log    local1 notice
+        chroot /var/lib/haproxy
+        stats socket /run/haproxy/admin.sock mode 660 level admin
+        stats timeout 30s
+        user haproxy
+        group haproxy
+        daemon
+
+        # Default SSL material locations
+        ca-base /etc/ssl/certs
+        crt-base /etc/ssl/private
+
+        # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
+        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+defaults
+        log     global
+        mode    http
+        option  httplog
+        option  dontlognull
+        timeout connect 5000
+        timeout client  50000
+        timeout server  50000
+        errorfile 400 /etc/haproxy/errors/400.http
+        errorfile 403 /etc/haproxy/errors/403.http
+        errorfile 408 /etc/haproxy/errors/408.http
+        errorfile 500 /etc/haproxy/errors/500.http
+        errorfile 502 /etc/haproxy/errors/502.http
+        errorfile 503 /etc/haproxy/errors/503.http
+        errorfile 504 /etc/haproxy/errors/504.http
+
+listen web_tcp_balancer
+    bind *:8080
+    mode tcp
+    balance roundrobin
+    server srv1 127.0.0.1:8081
+    server srv2 127.0.0.1:8082
+```
+
+### Задание 2
 
 `Что нужно сделать:`
 
-`Добавьте в Zabbix два хоста и задайте им имена <фамилия и инициалы-1> и <фамилия и инициалы-2>. Например: ivanovii-1 и ivanovii-2.
-
-Процесс выполнения
-Выполняя ДЗ сверяйтесь с процессом отражённым в записи лекции.
-Установите Zabbix Agent на 2 виртмашины, одной из них может быть ваш Zabbix Server
-Добавьте Zabbix Server в список разрешенных серверов ваших Zabbix Agentов
-Добавьте Zabbix Agentов в раздел Configuration > Hosts вашего Zabbix Servera
-Прикрепите за каждым хостом шаблон Linux by Zabbix Agent
-Проверьте что в разделе Latest Data начали появляться данные с добавленных агентов
-Требования к результату
- Результат данного задания сдавайте вместе с заданием 3
- Привяжите созданный шаблон к двум хостам. Также привяжите к обоим хостам шаблон Linux by Zabbix Agent.
-
-Процесс выполнения
-Выполняя ДЗ сверяйтесь с процессом отражённым в записи лекции.
-Зайдите в настройки каждого хоста и в разделе Templates прикрепите к этому хосту ваш шаблон
-Так же к каждому хосту привяжите шаблон Linux by Zabbix Agent
-Проверьте что в раздел Latest Data начали поступать необходимые данные из вашего шаблона
-Требования к результату
- Прикрепите в файл README.md скриншот страницы хостов, где будут видны привязки шаблонов с названиями «Задание 2-3». Хосты должны иметь зелёный статус подключения`
+`Запустите три simple python сервера на своей виртуальной машине на разных портах`
+`Настройте балансировку Weighted Round Robin на 7 уровне, чтобы первый сервер имел вес 2, второй - 3, а третий - 4`
+`HAproxy должен балансировать только тот http-трафик, который адресован домену example.local`
+`На проверку направьте конфигурационный файл haproxy, скриншоты, где видно перенаправление запросов на разные серверы при обращении к HAProxy c использованием домена example.local и без него.`
 
 
-### Решение 2-3
 
-`Скриншот к заданию 2-3:`
-![task2-3_hosts](https://github.com/djimboliv/8-03-hw/tree/main/img/task2-3_hosts.png)
+### Решение 2
 
-## Задание 4
+`Скриншот к заданию 2:`
+![task1_haproxy_7](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_haproxy_7.png)
 
-`Что нужно сделать:`
+[Ссылка на конфигурационный файл haproxy.cfg](haproxy_7.cfg)
 
-`Создайте свой кастомный дашборд.
+```
+global
+        log /dev/log    local0
+        log /dev/log    local1 notice
+        chroot /var/lib/haproxy
+        stats socket /run/haproxy/admin.sock mode 660 level admin
+        stats timeout 30s
+        user haproxy
+        group haproxy
+        daemon
 
-Процесс выполнения
-Выполняя ДЗ сверяйтесь с процессом отражённым в записи лекции.
-В разделе Dashboards создайте новый дашборд
-Разместите на нём несколько графиков на ваше усмотрение.
-Требования к результату
- Прикрепите в файл README.md скриншот дашборда с названием «Задание 4»`
+        # Default SSL material locations
+        ca-base /etc/ssl/certs
+        crt-base /etc/ssl/private
 
+        # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
+        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
 
-### Решение 4
+defaults
+        log     global
+        mode    http
+        option  httplog
+        option  dontlognull
+        timeout connect 5000
+        timeout client  50000
+        timeout server  50000
+        errorfile 400 /etc/haproxy/errors/400.http
+        errorfile 403 /etc/haproxy/errors/403.http
+        errorfile 408 /etc/haproxy/errors/408.http
+        errorfile 500 /etc/haproxy/errors/500.http
+        errorfile 502 /etc/haproxy/errors/502.http
+        errorfile 503 /etc/haproxy/errors/503.http
+        errorfile 504 /etc/haproxy/errors/504.http
 
-`Скриншот к заданию 4:`
-![task4_dashboards](https://github.com/djimboliv/8-03-hw/tree/main/img/task4_dashboards.png)
+frontend http_front
+    bind *:8088
+    mode http
+    acl is_example_local hdr_dom(host) -i example.local
+    use_backend http_back if is_example_local
+
+backend http_back
+    mode http
+    balance roundrobin
+    server srv1 127.0.0.1:8081 weight 2
+    server srv2 127.0.0.1:8082 weight 3
+    server srv3 127.0.0.1:8083 weight 4
+```
