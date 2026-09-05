@@ -1,129 +1,156 @@
-# Домашнее задание к занятию 2 «Кластеризация и балансировка нагрузки» - `Яковлев Кирилл`
+# Домашнее задание кОтказоустойчивость в облаке» - `Яковлев Кирилл`
 
 
 ### Задание 1
 `Что нужно сделать:`
 
-`Запустите два simple python сервера на своей виртуальной машине на разных портах`
-`Установите и настройте HAProxy, воспользуйтесь материалами к лекции по ссылке`
-`Настройте балансировку Round-robin на 4 уровне.`
-`На проверку направьте конфигурационный файл haproxy, скриншоты, где видно перенаправление запросов на разные серверы при обращении к HAProxy.`
+`Возьмите за основу решение к заданию 1 из занятия «Подъём инфраструктуры в Яндекс Облаке».`
+
+`Теперь вместо одной виртуальной машины сделайте terraform playbook, который:`
+`создаст 2 идентичные виртуальные машины. Используйте аргумент count для создания таких ресурсов;`
+`создаст таргет-группу. Поместите в неё созданные на шаге 1 виртуальные машины;`
+`создаст сетевой балансировщик нагрузки, который слушает на порту 80, отправляет трафик на порт 80 виртуальных машин и` `http healthcheck на порт 80 виртуальных машин.`
+`Рекомендуем изучить документацию сетевого балансировщика нагрузки для того, чтобы было понятно, что вы сделали.`
+
+`Установите на созданные виртуальные машины пакет Nginx любым удобным способом и запустите Nginx веб-сервер на порту 80.`
+
+`Перейдите в веб-консоль Yandex Cloud и убедитесь, что:`
+
+`созданный балансировщик находится в статусе Active,`
+`обе виртуальные машины в целевой группе находятся в состоянии healthy.`
+`Сделайте запрос на 80 порт на внешний IP-адрес балансировщика и убедитесь, что вы получаете ответ в виде дефолтной` `страницы Nginx.`
+`В качестве результата пришлите:`
+
+`1. Terraform Playbook.`
+
+`2. Скриншот статуса балансировщика и целевой группы.`
+
+`3. Скриншот страницы, которая открылась при запросе IP-адреса балансировщика.`
 
 ### Решение 1
-`Скриншот к заданию 1:`
-![task1_haproxy_4](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_haproxy_4.png)
 
-[Ссылка на конфигурационный файл haproxy.cfg](haproxy_4.cfg)
+## Файл Terraform Playbook 
 
-**Конфигурационный файл HAProxy (фрагмент L4 балансировки):**
-```
-global
-        log /dev/log    local0
-        log /dev/log    local1 notice
-        chroot /var/lib/haproxy
-        stats socket /run/haproxy/admin.sock mode 660 level admin
-        stats timeout 30s
-        user haproxy
-        group haproxy
-        daemon
-
-        # Default SSL material locations
-        ca-base /etc/ssl/certs
-        crt-base /etc/ssl/private
-
-        # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
-        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
-
-defaults
-        log     global
-        mode    http
-        option  httplog
-        option  dontlognull
-        timeout connect 5000
-        timeout client  50000
-        timeout server  50000
-        errorfile 400 /etc/haproxy/errors/400.http
-        errorfile 403 /etc/haproxy/errors/403.http
-        errorfile 408 /etc/haproxy/errors/408.http
-        errorfile 500 /etc/haproxy/errors/500.http
-        errorfile 502 /etc/haproxy/errors/502.http
-        errorfile 503 /etc/haproxy/errors/503.http
-        errorfile 504 /etc/haproxy/errors/504.http
-
-listen web_tcp_balancer
-    bind *:8080
-    mode tcp
-    balance roundrobin
-    server srv1 127.0.0.1:8081
-    server srv2 127.0.0.1:8082
-```
-
-### Задание 2
-
-`Что нужно сделать:`
-
-`Запустите три simple python сервера на своей виртуальной машине на разных портах`
-`Настройте балансировку Weighted Round Robin на 7 уровне, чтобы первый сервер имел вес 2, второй - 3, а третий - 4`
-`HAproxy должен балансировать только тот http-трафик, который адресован домену example.local`
-`На проверку направьте конфигурационный файл haproxy, скриншоты, где видно перенаправление запросов на разные серверы при обращении к HAProxy c использованием домена example.local и без него.`
-
-
-
-### Решение 2
-
-`Скриншот к заданию 2:`
-![task1_haproxy_7](https://github.com/djimboliv/8-03-hw/tree/main/img/task1_haproxy_7.png)
-
-[Ссылка на конфигурационный файл haproxy.cfg](haproxy_7.cfg)
+[Ссылка на файл Terraform Playbook ](main.tf)
 
 ```
-global
-        log /dev/log    local0
-        log /dev/log    local1 notice
-        chroot /var/lib/haproxy
-        stats socket /run/haproxy/admin.sock mode 660 level admin
-        stats timeout 30s
-        user haproxy
-        group haproxy
-        daemon
+terraform {
+  required_providers {
+    yandex = {
+      source = "yandex-cloud/yandex"
+    }
+  }
+  required_version = ">= 0.13"
+}
 
-        # Default SSL material locations
-        ca-base /etc/ssl/certs
-        crt-base /etc/ssl/private
+provider "yandex" {
+  token     = "<ВАШ_IAM_ТОКЕН>"
+  cloud_id  = "<ВАШ_CLOUD_ID>"
+  folder_id = "<ВАШ_FOLDER_ID>"
+  zone      = "ru-central1-a"
+}
 
-        # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
-        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+# Создаем сеть
+resource "yandex_vpc_network" "network-1" {
+  name = "network-1"
+}
 
-defaults
-        log     global
-        mode    http
-        option  httplog
-        option  dontlognull
-        timeout connect 5000
-        timeout client  50000
-        timeout server  50000
-        errorfile 400 /etc/haproxy/errors/400.http
-        errorfile 403 /etc/haproxy/errors/403.http
-        errorfile 408 /etc/haproxy/errors/408.http
-        errorfile 500 /etc/haproxy/errors/500.http
-        errorfile 502 /etc/haproxy/errors/502.http
-        errorfile 503 /etc/haproxy/errors/503.http
-        errorfile 504 /etc/haproxy/errors/504.http
+# Создаем подсеть
+resource "yandex_vpc_subnet" "subnet-1" {
+  name           = "subnet-1"
+  zone           = "ru-central1-a"
+  network_id     = yandex_vpc_network.network-1.id
+  v4_cidr_blocks = ["192.168.10.0/24"]
+}
 
-frontend http_front
-    bind *:8088
-    mode http
-    acl is_example_local hdr_dom(host) -i example.local
-    use_backend http_back if is_example_local
+# Получаем ID образа Ubuntu
+data "yandex_compute_image" "ubuntu" {
+  family = "ubuntu-2004-lts"
+}
 
-backend http_back
-    mode http
-    balance roundrobin
-    server srv1 127.0.0.1:8081 weight 2
-    server srv2 127.0.0.1:8082 weight 3
-    server srv3 127.0.0.1:8083 weight 4
+# 1. Создаем 2 идентичные ВМ с помощью аргумента count
+resource "yandex_compute_instance" "vm" {
+  count = 2
+  name  = "nginx-vm-${count.index + 1}"
+  zone  = "ru-central1-a"
+
+  resources {
+    cores  = 2
+    memory = 2
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = data.yandex_compute_image.ubuntu.id
+    }
+  }
+
+  network_interface {
+    subnet_id = yandex_vpc_subnet.subnet-1.id
+    nat       = true
+  }
+
+  # Устанавливаем Nginx через cloud-init
+  metadata = {
+    ssh-keys = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+    user-data = <<-EOF
+      #cloud-config
+      packages:
+        - nginx
+      runcmd:
+        - systemctl enable nginx
+        - systemctl start nginx
+    EOF
+  }
+}
+
+# 2. Создаем таргет-группу и помещаем в нее ВМ
+resource "yandex_lb_target_group" "target-group-1" {
+  name = "nginx-target-group"
+
+  dynamic "target" {
+    for_each = yandex_compute_instance.vm
+    content {
+      subnet_id = yandex_vpc_subnet.subnet-1.id
+      address   = target.value.network_interface.0.ip_address
+    }
+  }
+}
+
+# 3. Создаем сетевой балансировщик нагрузки
+resource "yandex_lb_network_load_balancer" "lb-1" {
+  name = "nginx-network-load-balancer"
+
+  listener {
+    name = "nginx-listener"
+    port = 80
+    external_address_spec {
+      ip_version = "ipv4"
+    }
+  }
+
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.target-group-1.id
+
+    healthcheck {
+      name = "http-healthcheck"
+      http_options {
+        port = 80
+        path = "/"
+      }
+    }
+  }
+}
+
+# Выводим внешний IP-адрес балансировщика в консоль
+output "load_balancer_public_ip" {
+  description = "Public IP address of the load balancer"
+  value       = yandex_lb_network_load_balancer.lb-1.listener.*.external_address_spec[0].*.address
+}
 ```
+
+`Скриншот статуса балансировщика и целевой группы.`
+![task_balancer_target](https://github.com/djimboliv/8-03-hw/tree/main/img/task_balancer_target.png)
+
+`Скриншот страницы, которая открылась при запросе IP-адреса балансировщика.`
+![task_welcome_nginx](https://github.com/djimboliv/8-03-hw/tree/main/img/task_welcome_nginx.png)
