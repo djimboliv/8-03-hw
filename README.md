@@ -27,7 +27,8 @@ sudo nmap -sV < ip-адрес >
 Suricata работает на сетевом уровне и перехватывает нестандартные TCP-флаги, массовые соединения и характерные User-Agent.
 
 
-``` 11/14/2026-12:05:10.123456 [**] [1:2009582:4] ET SCAN Nmap Scripting Engine User-Agent Observed (Nmap) [**]
+``` 
+11/14/2026-12:05:10.123456 [**] [1:2009582:4] ET SCAN Nmap Scripting Engine User-Agent Observed (Nmap) [**]
 [Classification: Web Application Attack] [Priority: 1] {TCP} 192.168.1.100:45678 -> 192.168.1.50:80
 11/14/2026-12:05:12.654321 [**] [1:2100469:2] GPL SCAN SYN PACKET [**] [Classification: Attempted Information Leak]
 [Priority: 2] {TCP} 192.168.1.100:51234 -> 192.168.1.50:22
@@ -72,18 +73,21 @@ hydra -L users.txt -P pass.txt < ip-адрес > ssh
 Логи системной авторизации 
 Сначала попытки фиксируются самим демоном SSH:
 
-```Nov 14 12:10:01 server sshd[15432]: Failed password for invalid user root from 192.168.1.100 port 49152 ssh2
+```
+Nov 14 12:10:01 server sshd[15432]: Failed password for invalid user root from 192.168.1.100 port 49152 ssh2
 Nov 14 12:10:01 server sshd[15434]: Failed password for admin from 192.168.1.100 port 49154 ssh2
 ```
 Логи Fail2Ban 
-```2026-11-14 12:10:01,123 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
+```
+2026-11-14 12:10:01,123 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
 2026-11-14 12:10:01,456 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
 2026-11-14 12:10:01,789 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
 2026-11-14 12:10:02,001 fail2ban.actions [1234]: NOTICE [sshd] Ban 192.168.1.100
 ```
 Логи Suricata
 
-```11/14/2026-12:10:00.123456  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.100:49152 -> 192.168.1.50:22
+```
+11/14/2026-12:10:00.123456  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.100:49152 -> 192.168.1.50:22
 ```
 
 После строки NOTICE [sshd] Ban 192.168.1.100 утилита Hydra начнет выдавать ошибки подключения (Connection refused / Connection timed out), так как Fail2Ban добавил правило в iptables (или nftables), полностью отбрасывающее пакеты от атакующего на 22 порт.
