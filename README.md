@@ -79,9 +79,10 @@ Nov 14 12:10:01 server sshd[15434]: Failed password for admin from 192.168.1.100
 ```2026-11-14 12:10:01,123 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
 2026-11-14 12:10:01,456 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
 2026-11-14 12:10:01,789 fail2ban.filter [1234]: INFO [sshd] Found 192.168.1.100 - 2026-11-14 12:10:01
-2026-11-14 12:10:02,001 fail2ban.actions [1234]: NOTICE [sshd] Ban 192.168.1.100\
+2026-11-14 12:10:02,001 fail2ban.actions [1234]: NOTICE [sshd] Ban 192.168.1.100
 ```
 Логи Suricata
+
 ```11/14/2026-12:10:00.123456  [**] [1:2001219:19] ET SCAN Potential SSH Scan [**] [Classification: Attempted Information Leak] [Priority: 2] {TCP} 192.168.1.100:49152 -> 192.168.1.50:22
 ```
 
